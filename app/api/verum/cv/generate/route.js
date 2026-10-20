@@ -1,5 +1,6 @@
 import { renderCV } from "@/lib/renderers/cv_renderizador";
 import { construirDatosCV } from "@/lib/verum/cv/cv-data";
+import { normalizarCvConGPT } from "../../../../../lib/verum/cv/cv-normalizer";
 
 export async function POST(req) {
   try {
@@ -36,9 +37,14 @@ export async function POST(req) {
       );
     }
 
-    const data = construirDatosCV(respuestas);
+ const rawData =
+  construirDatosCV(respuestas);
 
-    const html = await renderCV(data);
+const data =
+  await normalizarCvConGPT(rawData);
+
+const html =
+  await renderCV(data);
 
     return Response.json({
       ok: true,

@@ -1,14 +1,17 @@
 import { renderCV } from "@/lib/renderers/cv_renderizador";
 import { construirDatosCV } from "@/lib/verum/cv/cv-data";
+import { normalizarCvConGPT } from "../../../../../lib/verum/cv/cv-normalizer";
 
 export async function POST(req) {
   try {
     const body = await req.json();
 
-    const respuestas = Array.isArray(body?.respuestas)
-      ? body.respuestas
-      : [];
+  const respuestas = Array.isArray(body?.respuestas)
+  ? body.respuestas
+  : [];
 
+const template =
+  body?.template || "ats";
     if (respuestas.length === 0) {
       return new Response(
         "No hay información para generar la vista previa.",
@@ -21,9 +24,17 @@ export async function POST(req) {
       );
     }
 
-    const data = construirDatosCV(respuestas);
+const rawData =
+  construirDatosCV(respuestas);
 
-    const html = await renderCV(data);
+const data =
+  await normalizarCvConGPT(rawData);
+
+const html =
+  await renderCV(
+    data,
+    template
+  );
 
     return new Response(html, {
       status: 200,
