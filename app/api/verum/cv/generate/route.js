@@ -1,6 +1,12 @@
 import { renderCV } from "@/lib/renderers/cv_renderizador";
 import { construirDatosCV } from "@/lib/verum/cv/cv-data";
-import { normalizarCvConGPT } from "../../../../../lib/verum/cv/cv-normalizer";
+import { normalizarCvConGPT } from "@/lib/verum/cv/cv-normalizer";
+
+const AVAILABLE_TEMPLATES = new Set([
+  "ats",
+  "professional",
+  "creative",
+]);
 
 export async function POST(req) {
   try {
@@ -24,12 +30,12 @@ export async function POST(req) {
       );
     }
 
-    // Por ahora solo tenemos esta plantilla habilitada.
-    if (template !== "ats") {
+    if (!AVAILABLE_TEMPLATES.has(template)) {
       return Response.json(
         {
           ok: false,
-          error: "La plantilla seleccionada no está disponible.",
+          error:
+            "La plantilla seleccionada no está disponible.",
         },
         {
           status: 400,
@@ -37,19 +43,22 @@ export async function POST(req) {
       );
     }
 
- const rawData =
-  construirDatosCV(respuestas);
+    const rawData =
+      construirDatosCV(respuestas);
 
-const data =
-  await normalizarCvConGPT(rawData);
+    const data =
+      await normalizarCvConGPT(rawData);
 
-const html =
-  await renderCV(data);
+    const html =
+      await renderCV(
+        data,
+        template
+      );
 
     return Response.json({
       ok: true,
       status: "generated",
-      template: "ats",
+      template,
       data,
       html,
     });
@@ -62,7 +71,8 @@ const html =
     return Response.json(
       {
         ok: false,
-        error: "No fue posible generar el CV.",
+        error:
+          "No fue posible generar el CV.",
         detail: error.message,
       },
       {
